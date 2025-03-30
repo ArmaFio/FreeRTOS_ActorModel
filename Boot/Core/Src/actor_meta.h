@@ -12,23 +12,21 @@
 #include "semphr.h"
 #include <stdint.h>
 
-typedef struct{
+typedef struct stored_msg{
 	uint32_t p0;
 	uint32_t p1;
 	uint32_t p2;
-	uint32_t prio;
+	UBaseType_t prio;
+	struct stored_msg *next;
 }stored_msg;
 
 typedef struct actor_obj{
 
 	SemaphoreHandle_t lock;
-	msghand send;
-	uint32_t sizeb;
+	msghand handle;
 	void *state;
-
+	stored_msg *mailbox;
 	void (*des)(struct actor_obj *);
-
-	stored_msg mailbox[];
 
 } actor_obj;
 
