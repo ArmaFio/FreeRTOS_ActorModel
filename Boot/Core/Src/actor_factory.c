@@ -18,7 +18,7 @@ actor_handle actor_spawn(catalogue_entry e, void *params) {
        initialize it */
     actor_handle new_actor = malloc(sizeof(actor_obj));
     new_actor->lock = xSemaphoreCreateMutex();
-
+    new_actor->mailbox = NULL;
     /* Set actor-specific parameters by running its boot procedure */
     e->boot(new_actor, params);
 

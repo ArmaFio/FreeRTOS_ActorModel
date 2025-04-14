@@ -87,11 +87,14 @@ void HardFault_Handler(void)
   /* USER CODE BEGIN HardFault_IRQn 0 */
 
   /* USER CODE END HardFault_IRQn 0 */
-  while (1)
-  {
-    /* USER CODE BEGIN W1_HardFault_IRQn 0 */
-    /* USER CODE END W1_HardFault_IRQn 0 */
-  }
+	  __asm volatile
+	  (
+	    "TST lr, #4           \n"
+	    "ITE EQ               \n"
+	    "MRSEQ r0, MSP        \n"  // se viene usato lo stack MSP
+	    "MRSNE r0, PSP        \n"  // oppure PSP
+	    "B hard_fault_handler_c \n"
+	  );
 }
 
 /**

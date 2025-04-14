@@ -19,10 +19,18 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "FreeRTOS.h"
+#include "cmsis_os2.h"
 #include "extmem_manager.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "actor_meta.h"
+#include "mailbox.h"
+#include "catalogue.h"
+#include "fork.h"
+#include "actor_factory.h"
+#include "send.h"
+#include <stdio.h>
 
 /* USER CODE END Includes */
 
@@ -43,8 +51,28 @@
 
 /* Private variables ---------------------------------------------------------*/
 
+actor_handle actor;
+
+UART_HandleTypeDef huart3;
+
 XSPI_HandleTypeDef hxspi2;
 
+/* Definitions for defaultTask */
+osThreadId_t defaultTaskHandle;
+osThreadId_t handle2;
+osThreadId_t handle3;
+osThreadId_t handle4;
+osThreadId_t handle5;
+const osThreadAttr_t defaultTask_attributes = {
+  .name = "defaultTask",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityNormal,
+};
+const osThreadAttr_t Task2_attributes = {
+  .name = "task2",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityBelowNormal,
+};
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -55,6 +83,9 @@ static void MPU_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_SBS_Init(void);
 static void MX_XSPI2_Init(void);
+static void MX_USART3_UART_Init(void);
+void StartDefaultTask(void *argument);
+void StartTask2(void *argument);
 
 /* USER CODE BEGIN PFP */
 
@@ -69,8 +100,35 @@ static void MX_XSPI2_Init(void);
   * @brief  The application entry point.
   * @retval int
   */
+
+void hard_fault_handler_c(uint32_t *stack_address)
+{
+  uint32_t r0  = stack_address[0];
+  uint32_t r1  = stack_address[1];
+  uint32_t r2  = stack_address[2];
+  uint32_t r3  = stack_address[3];
+  uint32_t r12 = stack_address[4];
+  uint32_t lr  = stack_address[5]; // Link Register
+  uint32_t pc  = stack_address[6]; // <- questo ci interessa!
+  uint32_t psr = stack_address[7]; // Program Status Register
+
+  printf("=== HARD FAULT ===\r\n");
+  printf("R0  = 0x%08lX\r\n", r0);
+  printf("R1  = 0x%08lX\r\n", r1);
+  printf("R2  = 0x%08lX\r\n", r2);
+  printf("R3  = 0x%08lX\r\n", r3);
+  printf("R12 = 0x%08lX\r\n", r12);
+  printf("LR  = 0x%08lX\r\n", lr);
+  printf("PC  = 0x%08lX\r\n", pc);   // <--- Indirizzo dove è avvenuto il crash
+  printf("PSR = 0x%08lX\r\n", psr);
+
+  // Blocca il programma qui
+  while (1);
+}
+
 int main(void)
 {
+
 
   /* USER CODE BEGIN 1 */
 
@@ -107,10 +165,14 @@ int main(void)
   MX_GPIO_Init();
   MX_SBS_Init();
   MX_XSPI2_Init();
+  MX_USART3_UART_Init();
   MX_EXTMEM_MANAGER_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
+
+  /* Init scheduler */
+  osKernelInitialize();
 
   /* USER CODE BEGIN RTOS_MUTEX */
   /* add mutexes, ... */
@@ -128,6 +190,13 @@ int main(void)
   /* add queues, ... */
   /* USER CODE END RTOS_QUEUES */
 
+  /* Create the thread(s) */
+  /* creation of defaultTask */
+  defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
+  handle2= osThreadNew(StartTask2, NULL, &Task2_attributes);
+  handle3= osThreadNew(StartTask2, NULL, &Task2_attributes);
+  handle4= osThreadNew(StartTask2, NULL, &Task2_attributes);
+  handle5= osThreadNew(StartTask2, NULL, &Task2_attributes);
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
   /* USER CODE END RTOS_THREADS */
@@ -135,6 +204,9 @@ int main(void)
   /* USER CODE BEGIN RTOS_EVENTS */
   /* add events, ... */
   /* USER CODE END RTOS_EVENTS */
+
+  /* Start scheduler */
+  osKernelStart();
 
   /* We should never get here as control is now taken by the scheduler */
 
@@ -244,6 +316,54 @@ static void MX_SBS_Init(void)
 }
 
 /**
+  * @brief USART3 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART3_UART_Init(void)
+{
+
+  /* USER CODE BEGIN USART3_Init 0 */
+
+  /* USER CODE END USART3_Init 0 */
+
+  /* USER CODE BEGIN USART3_Init 1 */
+
+  /* USER CODE END USART3_Init 1 */
+  huart3.Instance = USART3;
+  huart3.Init.BaudRate = 115200;
+  huart3.Init.WordLength = UART_WORDLENGTH_8B;
+  huart3.Init.StopBits = UART_STOPBITS_1;
+  huart3.Init.Parity = UART_PARITY_NONE;
+  huart3.Init.Mode = UART_MODE_TX_RX;
+  huart3.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart3.Init.OverSampling = UART_OVERSAMPLING_16;
+  huart3.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+  huart3.Init.ClockPrescaler = UART_PRESCALER_DIV1;
+  huart3.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+  if (HAL_UART_Init(&huart3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_UARTEx_SetTxFifoThreshold(&huart3, UART_TXFIFO_THRESHOLD_1_8) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_UARTEx_SetRxFifoThreshold(&huart3, UART_RXFIFO_THRESHOLD_1_8) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_UARTEx_DisableFifoMode(&huart3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART3_Init 2 */
+
+  /* USER CODE END USART3_Init 2 */
+
+}
+
+/**
   * @brief XSPI2 Initialization Function
   * @param None
   * @retval None
@@ -304,6 +424,7 @@ static void MX_GPIO_Init(void)
 /* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPION_CLK_ENABLE();
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
@@ -314,11 +435,41 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE END 4 */
 
+/* USER CODE BEGIN Header_StartDefaultTask */
+/**
+  * @brief  Function implementing the defaultTask thread.
+  * @param  argument: Not used
+  * @retval None
+  */
+/* USER CODE END Header_StartDefaultTask */
+void StartDefaultTask(void *argument)
+{
+  /* USER CODE BEGIN 5 */
+  /* Infinite loop */
+
+printf("E' ANDATO CAZZO!");
+actor = actor_spawn(test, NULL);
+send(actor, actor,  0, 0, 0);
+
+  /* USER CODE END 5 */
+}
+
+void StartTask2(void *argument)
+{
+  /* USER CODE BEGIN 5 */
+  /* Infinite loop */
+
+send(actor, actor, 0, 0, 0);
+
+  /* USER CODE END 5 */
+}
+
+
  /* MPU Configuration */
 
 static void MPU_Config(void)
 {
-  MPU_Region_InitTypeDef MPU_InitStruct = {0};
+MPU_Region_InitTypeDef MPU_InitStruct = {0};
 
   /* Disables the MPU */
   HAL_MPU_Disable();
@@ -392,6 +543,10 @@ void Error_Handler(void)
   {
   }
   /* USER CODE END Error_Handler_Debug */
+}
+int __io_putchar(int ch) {
+    HAL_UART_Transmit(&huart3, (uint8_t*)&ch, 1, HAL_MAX_DELAY);
+    return ch;
 }
 
 #ifdef  USE_FULL_ASSERT

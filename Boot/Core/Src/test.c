@@ -10,11 +10,14 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include "actor_meta.h"
+#include "send.h"
 
 static void __attribute__((noreturn))
 handle(actor_handle self, uint32_t p0, uint32_t p1, uint32_t p2) {
 	self->state += 1;
+	xSemaphoreGive(self->lock);
 	vTaskDelete(NULL);
+	//send(self, self, 0, 0, 0);
 	while(1){}
 }
 

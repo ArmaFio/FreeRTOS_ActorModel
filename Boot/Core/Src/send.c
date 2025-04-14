@@ -13,9 +13,10 @@
 #include "actor_meta.h"
 #include "mailbox.h"
 #include "fork.h"
+#include "send.h"
 
 
-static void __attribute__((noreturn))
+void __attribute__((noreturn))
 send_message(actor_handle dest, uint32_t p0, uint32_t p1, uint32_t p2){
 	if(dest->mailbox == NULL){
 		if(xSemaphoreTake(dest->lock, (TickType_t) 0) == pdTRUE){
@@ -31,7 +32,9 @@ send_message(actor_handle dest, uint32_t p0, uint32_t p1, uint32_t p2){
 
 void send(actor_handle dest, actor_handle self, uint32_t p0, uint32_t p1, uint32_t p2){
 
-	actor_fork(self);
+	//actor_fork(self);
+
+	//xSemaphoreGive(dest->lock);
 
 	TaskStatus_t xTaskDetails;
 	vTaskGetInfo( /* The handle of the task being queried. */
