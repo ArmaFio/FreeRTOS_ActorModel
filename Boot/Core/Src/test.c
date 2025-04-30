@@ -14,7 +14,7 @@
 
 static void __attribute__((noreturn))
 handle(actor_handle self, uint32_t p0, uint32_t p1, uint32_t p2) {
-	if( (int) self->state < 1 ){
+	if( (int) self->state < 150 ){
 		self->state += 1;
 		xSemaphoreGive(self->lock);
 		//vTaskDelete(NULL);
