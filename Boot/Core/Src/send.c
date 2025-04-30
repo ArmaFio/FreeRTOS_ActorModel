@@ -30,7 +30,8 @@ send_message(actor_handle dest, uint32_t p0, uint32_t p1, uint32_t p2){
 	while(1){};
 }
 
-void send(actor_handle dest, actor_handle self, uint32_t p0, uint32_t p1, uint32_t p2){
+void __attribute__((noreturn))
+send(actor_handle dest, actor_handle self, uint32_t p0, uint32_t p1, uint32_t p2){
 
 	//actor_fork(self);
 
@@ -61,11 +62,13 @@ void send(actor_handle dest, actor_handle self, uint32_t p0, uint32_t p1, uint32
 	register void (*send_message_reg)(actor_handle dest, uint32_t p0, uint32_t p1, uint32_t p2) asm("r5") = send_message;
 
 	asm volatile (
-	    "msr msp, r4     \n\t" // Set PSP to aligned_sp (r4)
+	    "msr psp, r4     \n\t" // Set PSP to aligned_sp (r4)
 	    "blx r5           \n\t" // Call send_message (r5)
 	    :
 	    : "r" (dest_reg), "r" (p0_reg), "r" (p1_reg), "r" (p2_reg),
-	      "r" (aligned_sp_reg), "r" (send_message_reg)
+	      "r" (aligned_sp_reg), "r" (send_message_reg)\
 	);
+
+	while(1){}
 }
 
