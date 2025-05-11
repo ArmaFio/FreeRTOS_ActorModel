@@ -12,5 +12,6 @@
 
 /* All available pre-made actor classes */
 extern catalogue_entry test;
+extern catalogue_entry dispatcher;
 
 #endif /* SRC_CATALOGUE_H_ */

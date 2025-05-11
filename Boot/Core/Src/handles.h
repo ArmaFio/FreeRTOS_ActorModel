@@ -13,7 +13,7 @@
 /* Catalogue entry */
 typedef struct cat_cnt *catalogue_entry;
 typedef struct actor_obj *actor_handle;
-typedef void (*msghand)(actor_handle, uint32_t, uint32_t, uint32_t); /*(actor_handle,p0,p1,p2)*/
+typedef void (*msghand)(actor_handle, actor_handle, uint32_t, uint32_t, uint32_t); /*(self, destination, p0,p1,p2) (self and destination will often coincide) */
 typedef void (*bootf)(actor_handle, void *);
 
 #endif/* SRC_HANDLES_H_ */

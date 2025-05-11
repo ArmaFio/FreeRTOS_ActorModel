@@ -73,6 +73,21 @@ const osThreadAttr_t Task2_attributes = {
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityBelowNormal,
 };
+const osThreadAttr_t Task3_attributes = {
+  .name = "task3",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityBelowNormal,
+};
+const osThreadAttr_t Task4_attributes = {
+  .name = "task4",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityBelowNormal,
+};
+const osThreadAttr_t Task5_attributes = {
+  .name = "task5",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityBelowNormal,
+};
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -193,14 +208,12 @@ int main(void)
   /* Create the thread(s) */
   /* creation of defaultTask */
   defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
-  handle2= osThreadNew(StartTask2, NULL, &Task2_attributes);
-  handle3= osThreadNew(StartTask2, NULL, &Task2_attributes);
-  handle4= osThreadNew(StartTask2, NULL, &Task2_attributes);
-  handle5= osThreadNew(StartTask2, NULL, &Task2_attributes);
   /* USER CODE BEGIN RTOS_THREADS */
-  /* add threads, ... */
+  //handle2= osThreadNew(StartTask2, NULL, &Task2_attributes);
+  //handle3= osThreadNew(StartTask2, NULL, &Task3_attributes);
+  //handle4= osThreadNew(StartTask2, NULL, &Task4_attributes);
+  //handle5= osThreadNew(StartTask2, NULL, &Task5_attributes);
   /* USER CODE END RTOS_THREADS */
-
   /* USER CODE BEGIN RTOS_EVENTS */
   /* add events, ... */
   /* USER CODE END RTOS_EVENTS */
@@ -447,9 +460,8 @@ void StartDefaultTask(void *argument)
   /* USER CODE BEGIN 5 */
   /* Infinite loop */
 
-printf("E' ANDATO CAZZO!");
 actor = actor_spawn(test, NULL);
-send(actor, actor,  0, 0, 0);
+send(actor, actor, 0, 0, 0);
 
   /* USER CODE END 5 */
 }
@@ -459,7 +471,8 @@ void StartTask2(void *argument)
   /* USER CODE BEGIN 5 */
   /* Infinite loop */
 
-send(actor, actor, 0, 0, 0);
+send(actor, actor,  0, 0, 0);
+
 
   /* USER CODE END 5 */
 }

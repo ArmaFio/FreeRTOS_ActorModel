@@ -62,7 +62,7 @@ extern uint32_t SystemCoreClock;
 #define configUSE_PREEMPTION                     1
 #define configSUPPORT_STATIC_ALLOCATION          1
 #define configSUPPORT_DYNAMIC_ALLOCATION         1
-#define configUSE_IDLE_HOOK                      0
+#define configUSE_IDLE_HOOK                      1
 #define configUSE_TICK_HOOK                      0
 #define configCPU_CLOCK_HZ                       ( SystemCoreClock )
 #define configTICK_RATE_HZ                       ((TickType_t)1000)
@@ -108,12 +108,13 @@ extern uint32_t SystemCoreClock;
 #define configUSE_OS2_MUTEX                  1
 #define configTEX_S_C_B_SRAM                 ( 0x03UL )
 #define configTOTAL_MPU_REGIONS                16
+#define configNUM_THREAD_LOCAL_STORAGE_POINTERS 2
 /* Set the following definitions to 1 to include the API function, or zero
 to exclude the API function. */
 #define INCLUDE_vTaskPrioritySet             1
 #define INCLUDE_uxTaskPriorityGet            1
 #define INCLUDE_vTaskDelete                  1
-#define INCLUDE_vTaskCleanUpResources        0
+#define INCLUDE_vTaskCleanUpResources        1
 #define INCLUDE_vTaskSuspend                 1
 #define INCLUDE_xTaskDelayUntil              1
 #define INCLUDE_vTaskDelay                   1

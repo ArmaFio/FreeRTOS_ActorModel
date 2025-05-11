@@ -13,6 +13,7 @@
 #include <stdint.h>
 
 typedef struct stored_msg{
+	actor_handle dest;
 	uint32_t p0;
 	uint32_t p1;
 	uint32_t p2;

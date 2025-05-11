@@ -11,17 +11,30 @@
 #include <stdlib.h>
 #include "actor_meta.h"
 #include "send.h"
+#include "fork.h"
+#include "mailbox.h"
+#include "utils.h"
+
 
 static void __attribute__((noreturn))
-handle(actor_handle self, uint32_t p0, uint32_t p1, uint32_t p2) {
-	if( (int) self->state < 150 ){
+handle(actor_handle self, actor_handle dest, uint32_t p0, uint32_t p1, uint32_t p2) {
+	stored_msg *list;
+	if( (int) self->state < 5 ){
 		self->state += 1;
-		xSemaphoreGive(self->lock);
-		//vTaskDelete(NULL);
-		send(self, self, 0, 0, 0);
+		if ( (int) self->state == 1){
+			for (int i=0; i<4; i++){
+				mailbox_push(&list,0,0,0,self);
+			}
+			multiple_send(self,list);
+		}
+		else{
+			xSemaphoreGive(self->lock);
+			vTaskDelete(NULL);
+		}
 	}
 	else{
 		xSemaphoreGive(self->lock);
+		actor_fork(self);
 		vTaskDelete(NULL);
 	}
 	while(1){}
