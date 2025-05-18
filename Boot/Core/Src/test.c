@@ -22,23 +22,11 @@ handle(actor_handle self, actor_handle dest, uint32_t p0, uint32_t p1, uint32_t 
 	stored_msg *list;
 	if( (int) self->state < 250 ){
 		self->state += 1;
-		if ( (int) self->state == 1){
-			for (int i=0; i<249; i++){
+		if ( (int) self->state <= 5){
+			for (int i=0; i<5; i++){
 				mailbox_push(&list,0,0,0,self);
-				if(i == 247){
-					i++;
-				}
 			}
-			int j = 0;
-			stored_msg *tmp;
-			tmp = list;
-			while(tmp->next != NULL){
-				j++;
-				tmp = tmp->next;
-			}
-
 			multiple_send(self,list);
-			printf("%d\n", j);
 		}
 		else{
 			xSemaphoreGive(self->lock);

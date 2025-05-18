@@ -51,7 +51,7 @@ send(actor_handle dest, actor_handle self, uint32_t p0, uint32_t p1, uint32_t p2
 	args->p0   = p0;
 	args->p1   = p1;
 	args->p2   = p2;
-	jmp_buf *buf = (jmp_buf*)pvTaskGetThreadLocalStoragePointer(NULL, 0);
+	jmp_buf *buf = (jmp_buf *)pvTaskGetThreadLocalStoragePointer(NULL, 0);
 
 	vTaskSetThreadLocalStoragePointer(NULL, 1, args);
 

@@ -15,12 +15,12 @@
 
 // Wrapper del task
 void jump_to_next() {
-    jmp_buf *jump_buf_ptr = pvPortMalloc(sizeof(jmp_buf));
+    jmp_buf jump_buf_ptr;
     void *args = NULL;
 
 
-    if (setjmp(*jump_buf_ptr) == 0) {
-    	vTaskSetThreadLocalStoragePointer(NULL, 0, *jump_buf_ptr);
+    if (setjmp(jump_buf_ptr) == 0) {
+    	vTaskSetThreadLocalStoragePointer(NULL, 0, jump_buf_ptr);
     	return;
     } else {
     	args = pvTaskGetThreadLocalStoragePointer(NULL, 1);
@@ -31,7 +31,7 @@ void jump_to_next() {
 }
 
 void end(){
-	jmp_buf *jmp = pvTaskGetThreadLocalStoragePointer(NULL, 0);
-	vPortFree(jmp);
+	//jmp_buf *jmp = pvTaskGetThreadLocalStoragePointer(NULL, 0);
+	//vPortFree(jmp);
 	vTaskDelete(NULL);
 }
