@@ -207,7 +207,7 @@ int main(void)
 
   /* Create the thread(s) */
   /* creation of defaultTask */
-  defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
+  defaultTaskHandle = osThreadNew(StartDefaultTask, (void*)defaultTask_attributes.stack_size, &defaultTask_attributes);
   /* USER CODE BEGIN RTOS_THREADS */
   //handle2= osThreadNew(StartTask2, NULL, &Task2_attributes);
   //handle3= osThreadNew(StartTask2, NULL, &Task3_attributes);
@@ -459,7 +459,8 @@ void StartDefaultTask(void *argument)
 {
   /* USER CODE BEGIN 5 */
   /* Infinite loop */
-
+UBaseType_t stacksize= ((uint32_t) argument)/ (sizeof(StackType_t));
+vTaskSetThreadLocalStoragePointer(NULL, 0, (void *)stacksize);
 actor = actor_spawn(test, NULL);
 send(actor, actor, 0, 0, 0);
 
@@ -567,14 +568,11 @@ int __io_putchar(int ch) {
   * @brief  Reports the name of the source file and the source line number
   *         where the assert_param error has occurred.
   * @param  file: pointer to the source file name
-  * @param  line: assert_param error line source number
-  * @retval None
-  */
-void assert_failed(uint8_t *file, uint32_t line)
+  * D assert_failed(uint8_t *file, uint32_t line)
 {
-  /* USER CODE BEGIN 6 */
-  /* User can add his own implementation to report the file name and line number,
-     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
-  /* USER CODE END 6 */
+   USER CODE BEGIN 6
+   User can add his own implementation to report the file name and line number,
+     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line)
+  USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */

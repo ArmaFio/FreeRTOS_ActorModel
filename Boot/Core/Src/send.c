@@ -17,9 +17,21 @@
 #include "actor_factory.h"
 #include "utils.h"
 
+typedef struct tskTaskControlBlock
+{
+    volatile StackType_t    pxTopOfStack;
+    ListItem_t               xStateListItem;
+    ListItem_t               xEventListItem;
+} TCB_t;
 
 void __attribute__((noreturn))
 send_message(actor_handle dest, uint32_t p0, uint32_t p1, uint32_t p2){
+/*	TaskHandle_t handle = xTaskGetCurrentTaskHandle();
+	TCB_t *pxTCB = (TCB_t *) handle;
+	vListInitialiseItem( &pxTCB->xEventListItem );
+	listSET_LIST_ITEM_OWNER( &pxTCB->xEventListItem, pxTCB );
+	vListInitialiseItem( &pxTCB->xStateListItem );
+	listSET_LIST_ITEM_OWNER( &pxTCB->xStateListItem, pxTCB ); */
 	if(dest->mailbox == NULL){
 		if(xSemaphoreTake(dest->lock, (TickType_t) 0) == pdTRUE){
 			dest->handle(dest, dest, p0, p1, p2);
@@ -34,7 +46,7 @@ send_message(actor_handle dest, uint32_t p0, uint32_t p1, uint32_t p2){
 
 void __attribute__((noreturn))
 send(actor_handle dest, actor_handle self, uint32_t p0, uint32_t p1, uint32_t p2){
-	xSemaphoreGive(self->lock);
+	//xSemaphoreGive(self->lock);
 	actor_fork(self);
 
 
@@ -50,7 +62,8 @@ send(actor_handle dest, actor_handle self, uint32_t p0, uint32_t p1, uint32_t p2
 	                  /* Include the task state in the TaskStatus_t structure. */
 	                  eInvalid );
 
-	StackType_t *StackBase = xTaskDetails.pxStackBase;
+	UBaseType_t stacksize = (UBaseType_t)pvTaskGetThreadLocalStoragePointer(NULL, 0);
+	StackType_t *StackBase = (xTaskDetails.pxStackBase+stacksize-1);
 
 	uintptr_t aligned_sp = (uintptr_t)StackBase & ~0x7;// Align at 8 byte
 	/*if(pvTaskGetThreadLocalStoragePointer(NULL, 1)==NULL){
