@@ -31,6 +31,7 @@
 #include "actor_factory.h"
 #include "send.h"
 #include <stdio.h>
+#include "utils.h"
 
 /* USER CODE END Includes */
 
@@ -462,6 +463,7 @@ void StartDefaultTask(void *argument)
 UBaseType_t stacksize= ((uint32_t) argument)/ (sizeof(StackType_t));
 vTaskSetThreadLocalStoragePointer(NULL, 0, (void *)stacksize);
 actor = actor_spawn(test, NULL);
+jump_to_next();
 send(actor, actor, 0, 0, 0);
 
   /* USER CODE END 5 */

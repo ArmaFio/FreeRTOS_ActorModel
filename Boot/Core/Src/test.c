@@ -14,28 +14,41 @@
 #include "fork.h"
 #include "mailbox.h"
 #include "utils.h"
+#include "stdio.h"
 
 
 static void __attribute__((noreturn))
 handle(actor_handle self, actor_handle dest, uint32_t p0, uint32_t p1, uint32_t p2) {
 	stored_msg *list;
-	if( (int) self->state < 5 ){
+	if( (int) self->state < 250 ){
 		self->state += 1;
 		if ( (int) self->state == 1){
-			for (int i=0; i<4; i++){
+			for (int i=0; i<249; i++){
 				mailbox_push(&list,0,0,0,self);
+				if(i == 247){
+					i++;
+				}
 			}
+			int j = 0;
+			stored_msg *tmp;
+			tmp = list;
+			while(tmp->next != NULL){
+				j++;
+				tmp = tmp->next;
+			}
+
 			multiple_send(self,list);
+			printf("%d\n", j);
 		}
 		else{
 			xSemaphoreGive(self->lock);
-			vTaskDelete(NULL);
+			end();
 		}
 	}
 	else{
 		xSemaphoreGive(self->lock);
 		actor_fork(self);
-		vTaskDelete(NULL);
+		end();
 	}
 	while(1){}
 }

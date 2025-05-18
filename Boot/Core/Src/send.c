@@ -16,22 +16,19 @@
 #include "send.h"
 #include "actor_factory.h"
 #include "utils.h"
+#include "setjmp.h"
 
-typedef struct tskTaskControlBlock
-{
-    volatile StackType_t    pxTopOfStack;
-    ListItem_t               xStateListItem;
-    ListItem_t               xEventListItem;
-} TCB_t;
+typedef struct {
+    uint32_t p0, p1, p2;
+    actor_handle dest;
+} SendArgs_t;
 
 void __attribute__((noreturn))
-send_message(actor_handle dest, uint32_t p0, uint32_t p1, uint32_t p2){
-/*	TaskHandle_t handle = xTaskGetCurrentTaskHandle();
-	TCB_t *pxTCB = (TCB_t *) handle;
-	vListInitialiseItem( &pxTCB->xEventListItem );
-	listSET_LIST_ITEM_OWNER( &pxTCB->xEventListItem, pxTCB );
-	vListInitialiseItem( &pxTCB->xStateListItem );
-	listSET_LIST_ITEM_OWNER( &pxTCB->xStateListItem, pxTCB ); */
+send_message(void *param){
+	SendArgs_t *a = (SendArgs_t *)param;
+	actor_handle dest = a->dest;
+	uint32_t p0 = a->p0, p1 = a->p1, p2 = a->p2;
+
 	if(dest->mailbox == NULL){
 		if(xSemaphoreTake(dest->lock, (TickType_t) 0) == pdTRUE){
 			dest->handle(dest, dest, p0, p1, p2);
@@ -39,7 +36,7 @@ send_message(actor_handle dest, uint32_t p0, uint32_t p1, uint32_t p2){
 	}
 	else{
 		mailbox_push(&(dest->mailbox), p0, p1, p2, dest);
-		vTaskDelete(NULL);
+		end();
 	}
 	while(1){};
 }
@@ -49,44 +46,16 @@ send(actor_handle dest, actor_handle self, uint32_t p0, uint32_t p1, uint32_t p2
 	//xSemaphoreGive(self->lock);
 	actor_fork(self);
 
+	SendArgs_t *args = pvPortMalloc(sizeof(*args));
+	args->dest = dest;
+	args->p0   = p0;
+	args->p1   = p1;
+	args->p2   = p2;
+	jmp_buf *buf = (jmp_buf*)pvTaskGetThreadLocalStoragePointer(NULL, 0);
 
-	TaskStatus_t xTaskDetails;
-	vTaskGetInfo( /* The handle of the task being queried. */
-	                  NULL,
-	                  /* The TaskStatus_t structure to complete with information
-	                     on xTask. */
-	                  &xTaskDetails,
-	                  /* Include the stack high water mark value in the
-	                     TaskStatus_t structure. */
-	                  pdTRUE,
-	                  /* Include the task state in the TaskStatus_t structure. */
-	                  eInvalid );
+	vTaskSetThreadLocalStoragePointer(NULL, 1, args);
 
-	UBaseType_t stacksize = (UBaseType_t)pvTaskGetThreadLocalStoragePointer(NULL, 0);
-	StackType_t *StackBase = (xTaskDetails.pxStackBase+stacksize-1);
-
-	uintptr_t aligned_sp = (uintptr_t)StackBase & ~0x7;// Align at 8 byte
-	/*if(pvTaskGetThreadLocalStoragePointer(NULL, 1)==NULL){
-		uint32_t psp_val;
-		__asm volatile ("mrs %0, psp" : "=r" (psp_val));
-		vTaskSetThreadLocalStoragePointer(NULL, 1, (void *)psp_val);
-	}*/
-
-	// Use register variables to bind parameters to specific registers
-	register actor_handle dest_reg asm("r0") = dest;
-	register uint32_t p0_reg asm("r1") = p0;
-	register uint32_t p1_reg asm("r2") = p1;
-	register uint32_t p2_reg asm("r3") = p2;
-	register uintptr_t aligned_sp_reg asm("r4") = aligned_sp;
-	register void (*send_message_reg)(actor_handle dest, uint32_t p0, uint32_t p1, uint32_t p2) asm("r5") = send_message;
-	asm volatile (
-	    "msr psp, r4     \n\t" // Instruction barrier// Set PSP to aligned_sp (r4)
-	    "blx r5           \n\t" // Call send_message (r5)
-	    :
-		:
-		  "r" (dest_reg), "r" (p0_reg), "r" (p1_reg), "r" (p2_reg),
-		  "r" (aligned_sp_reg), "r" (send_message_reg)
-	);
+	longjmp(*buf, 1);
 
 	while(1){}
 }
