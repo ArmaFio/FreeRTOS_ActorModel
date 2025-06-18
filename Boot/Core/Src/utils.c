@@ -13,25 +13,27 @@
 
 
 
+void __attribute__((noreturn))
+noreturnjump(){
+	void *args = NULL;
+	args = pvTaskGetThreadLocalStoragePointer(NULL, 1);
+	send_message(args);
+	while(1){};
+}
+
 // Wrapper del task
+
 void jump_to_next() {
-    jmp_buf jump_buf_ptr;
-    void *args = NULL;
-
-
-    if (setjmp(jump_buf_ptr) == 0) {
+    jmp_buf *jump_buf_ptr= pvPortMalloc(sizeof(jmp_buf));
+    if (setjmp(*jump_buf_ptr) == 0) {
     	vTaskSetThreadLocalStoragePointer(NULL, 0, jump_buf_ptr);
-    	return;
     } else {
-    	args = pvTaskGetThreadLocalStoragePointer(NULL, 1);
-    	send_message(args);
+    	noreturnjump();
     }
-
-    end();
 }
 
 void end(){
-	//jmp_buf *jmp = pvTaskGetThreadLocalStoragePointer(NULL, 0);
-	//vPortFree(jmp);
+	jmp_buf *jmp = pvTaskGetThreadLocalStoragePointer(NULL, 0);
+	vPortFree(jmp);
 	vTaskDelete(NULL);
 }

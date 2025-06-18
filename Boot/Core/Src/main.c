@@ -32,6 +32,8 @@
 #include "send.h"
 #include <stdio.h>
 #include "utils.h"
+#include "tokring.h"
+#include <stdlib.h>
 
 /* USER CODE END Includes */
 
@@ -456,18 +458,26 @@ static void MX_GPIO_Init(void)
   * @retval None
   */
 /* USER CODE END Header_StartDefaultTask */
-void StartDefaultTask(void *argument)
+void __attribute__((noreturn))
+StartDefaultTask(void *argument)
 {
   /* USER CODE BEGIN 5 */
   /* Infinite loop */
-UBaseType_t stacksize= ((uint32_t) argument)/ (sizeof(StackType_t));
+/*UBaseType_t stacksize= ((uint32_t) argument)/ (sizeof(StackType_t));
 vTaskSetThreadLocalStoragePointer(NULL, 0, (void *)stacksize);
 actor = actor_spawn(test, NULL);
 jump_to_next();
-send(actor, actor, 0, 0, 0);
-
+send(actor, actor, 0, 0, 0);*/
+	boot_args *args = malloc(sizeof(boot_args));
+	args -> first = NULL;
+	args -> actor_number = 7;
+	actor = actor_spawn(tokring, args);
+	jump_to_next();
+	send(actor, actor, 7, 0, 0);
   /* USER CODE END 5 */
 }
+
+
 
 void StartTask2(void *argument)
 {

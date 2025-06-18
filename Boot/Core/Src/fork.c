@@ -11,16 +11,19 @@
 #include "actor_meta.h"
 #include "mailbox.h"
 #include "utils.h"
-
+#include <stdlib.h>
 
 void next_message_process(void *actor){
-	stored_msg *msg;
+	stored_msg *msg, msg1;
 	actor_handle self = (actor_handle) actor;
+	vTaskDelay(1);
 	jump_to_next();
 	xSemaphoreTake(self->lock, portMAX_DELAY);
 	msg = mailbox_pop(&(self->mailbox));
 	vTaskPrioritySet(NULL, msg->prio);
-	self->handle(self, msg->dest, msg->p0, msg->p1, msg->p2);
+	msg1 = *msg;
+	vPortFree(msg);
+	self->handle(self, msg1.dest, msg1.p0, msg1.p1, msg1.p2);
 }
 
 void actor_fork(actor_handle self){

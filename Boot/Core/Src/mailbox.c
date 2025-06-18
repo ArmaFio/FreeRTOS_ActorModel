@@ -14,7 +14,7 @@
 #include "mailbox.h"
 
 void mailbox_push (stored_msg **mailbox, uint32_t p0, uint32_t p1, uint32_t p2, actor_handle dest){
-	stored_msg *message = malloc(sizeof(stored_msg)), *curr;
+	stored_msg *message=pvPortMalloc(sizeof(stored_msg)), *curr;
 	message->dest = dest;
 	message->p0 = p0;
 	message->p1 = p1;
@@ -46,4 +46,6 @@ stored_msg* mailbox_pop(stored_msg **mailbox){
 	*mailbox = (*mailbox)->next;
 	return next_msg;
 }
+
+
 

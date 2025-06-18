@@ -14,4 +14,5 @@ catalogue_entry test = &test_cat;
 extern cat_cnt disp_cat;
 catalogue_entry dispatcher = &disp_cat;
 
-
+extern cat_cnt tokr_cat;
+catalogue_entry tokring = &tokr_cat;

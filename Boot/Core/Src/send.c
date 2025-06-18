@@ -17,6 +17,7 @@
 #include "actor_factory.h"
 #include "utils.h"
 #include "setjmp.h"
+#include <stdio.h>
 
 typedef struct {
     uint32_t p0, p1, p2;
@@ -25,10 +26,11 @@ typedef struct {
 
 void __attribute__((noreturn))
 send_message(void *param){
-	SendArgs_t *a = (SendArgs_t *)param;
-	actor_handle dest = a->dest;
-	uint32_t p0 = a->p0, p1 = a->p1, p2 = a->p2;
-
+	SendArgs_t *arg = (SendArgs_t *)param;
+	actor_handle dest = arg->dest;
+	uint32_t p0 = arg->p0, p1 = arg->p1, p2 = arg->p2;
+	//vTaskSetThreadLocalStoragePointer(NULL, 1, NULL);
+	vPortFree(arg);
 	if(dest->mailbox == NULL){
 		if(xSemaphoreTake(dest->lock, (TickType_t) 0) == pdTRUE){
 			dest->handle(dest, dest, p0, p1, p2);
@@ -43,31 +45,34 @@ send_message(void *param){
 
 void __attribute__((noreturn))
 send(actor_handle dest, actor_handle self, uint32_t p0, uint32_t p1, uint32_t p2){
-	//xSemaphoreGive(self->lock);
-	actor_fork(self);
+    actor_fork(self);
+    SendArgs_t *args = pvPortMalloc(sizeof(*args));
+    args->dest = dest;
+    args->p0   = p0;
+    args->p1   = p1;
+    args->p2   = p2;
 
-	SendArgs_t *args = pvPortMalloc(sizeof(*args));
-	args->dest = dest;
-	args->p0   = p0;
-	args->p1   = p1;
-	args->p2   = p2;
-	jmp_buf *buf = (jmp_buf *)pvTaskGetThreadLocalStoragePointer(NULL, 0);
+    jmp_buf *buf = (jmp_buf *)pvTaskGetThreadLocalStoragePointer(NULL, 0);
 
-	vTaskSetThreadLocalStoragePointer(NULL, 1, args);
+    vTaskSetThreadLocalStoragePointer(NULL, 1, args);
+    xSemaphoreGive(self->lock);
+    longjmp(*buf, 1);
 
-	longjmp(*buf, 1);
-
-	while(1){}
+    while (1) {} // fallback
 }
+
 
 void __attribute__((noreturn))
 multiple_send(actor_handle self, stored_msg *messages){
+	stored_msg firstmsg;
 	actor_fork(self);
 	xSemaphoreGive(self->lock);
 	actor_handle disp = actor_spawn(dispatcher, messages);
 	xSemaphoreTake(disp->lock, portMAX_DELAY);
 	stored_msg *first = mailbox_pop(&(disp->mailbox));
-	disp->handle(disp, first->dest, first->p0, first->p1, first->p2);
+	firstmsg = *first;
+	vPortFree(first);
+	disp->handle(disp, firstmsg.dest, firstmsg.p0, firstmsg.p1, firstmsg.p2);
 	while(1){};
 }
 

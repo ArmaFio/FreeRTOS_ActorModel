@@ -20,11 +20,11 @@
 static void __attribute__((noreturn))
 handle(actor_handle self, actor_handle dest, uint32_t p0, uint32_t p1, uint32_t p2) {
 	stored_msg *list;
-	if( (int) self->state < 250 ){
+	if( (int) self->state < 100){
 		self->state += 1;
-		if ( (int) self->state <= 5){
-			for (int i=0; i<5; i++){
-				mailbox_push(&list,0,0,0,self);
+		if ( (int) self->state == 1){
+			for (int i=0; i<100; i++){
+				mailbox_push(&list, i, i, i, self);
 			}
 			multiple_send(self,list);
 		}
@@ -38,8 +38,9 @@ handle(actor_handle self, actor_handle dest, uint32_t p0, uint32_t p1, uint32_t 
 		actor_fork(self);
 		end();
 	}
-	while(1){}
+		while(1){}
 }
+
 
 void test_boot(actor_handle self, void *args) {
 	//TODO Factory has to initialize lock and mailbox
