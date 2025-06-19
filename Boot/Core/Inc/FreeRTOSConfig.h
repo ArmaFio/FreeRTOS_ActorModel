@@ -108,7 +108,7 @@ extern uint32_t SystemCoreClock;
 #define configUSE_OS2_MUTEX                  1
 #define configTEX_S_C_B_SRAM                 ( 0x03UL )
 #define configTOTAL_MPU_REGIONS                16
-#define configNUM_THREAD_LOCAL_STORAGE_POINTERS 2
+#define configNUM_THREAD_LOCAL_STORAGE_POINTERS 3
 /* Set the following definitions to 1 to include the API function, or zero
 to exclude the API function. */
 #define INCLUDE_vTaskPrioritySet             1

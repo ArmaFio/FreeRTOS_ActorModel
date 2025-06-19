@@ -34,6 +34,10 @@ void jump_to_next() {
 
 void end(){
 	jmp_buf *jmp = pvTaskGetThreadLocalStoragePointer(NULL, 0);
+	int isBeingDeleted = (int)(intptr_t) pvTaskGetThreadLocalStoragePointer(NULL, 2);
 	vPortFree(jmp);
-	vTaskSuspend(NULL);
+	if (isBeingDeleted == 1)
+		vTaskSuspend(NULL);
+	else
+		vTaskDelete(NULL);
 }
