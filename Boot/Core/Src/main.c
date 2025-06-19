@@ -463,17 +463,17 @@ StartDefaultTask(void *argument)
 {
   /* USER CODE BEGIN 5 */
   /* Infinite loop */
-/*UBaseType_t stacksize= ((uint32_t) argument)/ (sizeof(StackType_t));
+UBaseType_t stacksize= ((uint32_t) argument)/ (sizeof(StackType_t));
 vTaskSetThreadLocalStoragePointer(NULL, 0, (void *)stacksize);
 actor = actor_spawn(test, NULL);
 jump_to_next();
-send(actor, actor, 0, 0, 0);*/
-	boot_args *args = malloc(sizeof(boot_args));
+send(actor, actor, 0, 0, 0);
+	/*boot_args *args = malloc(sizeof(boot_args));
 	args -> first = NULL;
 	args -> actor_number = 7;
 	actor = actor_spawn(tokring, args);
 	jump_to_next();
-	send(actor, actor, 7, 0, 0);
+	send(actor, actor, 7, 0, 0);*/
   /* USER CODE END 5 */
 }
 

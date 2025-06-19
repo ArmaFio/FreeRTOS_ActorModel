@@ -35,5 +35,5 @@ void jump_to_next() {
 void end(){
 	jmp_buf *jmp = pvTaskGetThreadLocalStoragePointer(NULL, 0);
 	vPortFree(jmp);
-	vTaskDelete(NULL);
+	vTaskSuspend(NULL);
 }
