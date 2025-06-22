@@ -61,36 +61,12 @@ UART_HandleTypeDef huart3;
 XSPI_HandleTypeDef hxspi2;
 
 /* Definitions for defaultTask */
-osThreadId_t defaultTaskHandle;
-osThreadId_t handle2;
-osThreadId_t handle3;
-osThreadId_t handle4;
-osThreadId_t handle5;
-const osThreadAttr_t defaultTask_attributes = {
-  .name = "defaultTask",
-  .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityNormal,
-};
-const osThreadAttr_t Task2_attributes = {
-  .name = "task2",
-  .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityBelowNormal,
-};
-const osThreadAttr_t Task3_attributes = {
-  .name = "task3",
-  .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityBelowNormal,
-};
-const osThreadAttr_t Task4_attributes = {
-  .name = "task4",
-  .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityBelowNormal,
-};
-const osThreadAttr_t Task5_attributes = {
-  .name = "task5",
-  .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityBelowNormal,
-};
+TaskHandle_t defaultTaskHandle;
+TaskHandle_t handle2;
+TaskHandle_t handle3;
+TaskHandle_t handle4;
+TaskHandle_t handle5;
+
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -146,7 +122,7 @@ void hard_fault_handler_c(uint32_t *stack_address)
 
 int main(void)
 {
-
+  int done;
 
   /* USER CODE BEGIN 1 */
 
@@ -190,7 +166,6 @@ int main(void)
   /* USER CODE END 2 */
 
   /* Init scheduler */
-  osKernelInitialize();
 
   /* USER CODE BEGIN RTOS_MUTEX */
   /* add mutexes, ... */
@@ -210,7 +185,10 @@ int main(void)
 
   /* Create the thread(s) */
   /* creation of defaultTask */
-  defaultTaskHandle = osThreadNew(StartDefaultTask, (void*)defaultTask_attributes.stack_size, &defaultTask_attributes);
+  done = xTaskCreate(StartDefaultTask, "defaultTask", 512, NULL, 10,  &defaultTaskHandle);
+  if (!done){
+	  return 1;
+  }
   /* USER CODE BEGIN RTOS_THREADS */
   //handle2= osThreadNew(StartTask2, NULL, &Task2_attributes);
   //handle3= osThreadNew(StartTask2, NULL, &Task3_attributes);
@@ -222,7 +200,7 @@ int main(void)
   /* USER CODE END RTOS_EVENTS */
 
   /* Start scheduler */
-  osKernelStart();
+  vTaskStartScheduler();
 
   /* We should never get here as control is now taken by the scheduler */
 
@@ -463,8 +441,6 @@ StartDefaultTask(void *argument)
 {
   /* USER CODE BEGIN 5 */
   /* Infinite loop */
-UBaseType_t stacksize= ((uint32_t) argument)/ (sizeof(StackType_t));
-vTaskSetThreadLocalStoragePointer(NULL, 0, (void *)stacksize);
 actor = actor_spawn(test, NULL);
 jump_to_next();
 send(actor, actor, 0, 0, 0);
