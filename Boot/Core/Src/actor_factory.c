@@ -16,7 +16,7 @@
 actor_handle actor_spawn(catalogue_entry e, void *params) {
     /* Allocate an actor descriptor object from the allocation pool, then
        initialize it */
-    actor_handle new_actor = malloc(sizeof(actor_obj));
+    actor_handle new_actor = pvPortMalloc(sizeof(actor_obj));
     new_actor->lock = xSemaphoreCreateMutex();
     new_actor->mailbox = NULL;
     /* Set actor-specific parameters by running its boot procedure */
@@ -28,6 +28,6 @@ actor_handle actor_spawn(catalogue_entry e, void *params) {
 void actor_retire(actor_handle a) {
     /* Call destructor */
     a->des(a);
-    free(a);
+    vPortFree(a);
     return;
 }

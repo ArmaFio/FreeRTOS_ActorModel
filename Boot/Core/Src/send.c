@@ -61,14 +61,38 @@ send(actor_handle dest, actor_handle self, uint32_t p0, uint32_t p1, uint32_t p2
     while (1) {} // fallback
 }
 
+void __attribute__((noreturn))
+forward(actor_handle dest, actor_handle self, uint32_t p0, uint32_t p1, uint32_t p2){
+    actor_fork(self);
+    SendArgs_t *args = pvPortMalloc(sizeof(*args));
+    args->dest = dest;
+    args->p0   = p0;
+    args->p1   = p1;
+    args->p2   = p2;
+
+    jmp_buf *buf = (jmp_buf *)pvTaskGetThreadLocalStoragePointer(NULL, 0);
+
+    vTaskSetThreadLocalStoragePointer(NULL, 1, args);
+    xSemaphoreGive(self->lock);
+	if(self->mailbox == NULL){
+		actor_retire(self);
+	}
+    longjmp(*buf, 1);
+
+    while (1) {} // fallback
+}
+
 
 void __attribute__((noreturn))
 multiple_send(actor_handle self, stored_msg *messages){
+	size_t size;
+	size = xPortGetFreeHeapSize();
 	stored_msg firstmsg;
 	actor_fork(self);
 	xSemaphoreGive(self->lock);
 	actor_handle disp = actor_spawn(dispatcher, messages);
 	xSemaphoreTake(disp->lock, portMAX_DELAY);
+	printf("%d", size);
 	stored_msg *first = mailbox_pop(&(disp->mailbox));
 	firstmsg = *first;
 	vPortFree(first);

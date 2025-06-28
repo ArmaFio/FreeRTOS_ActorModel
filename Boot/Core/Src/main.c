@@ -441,15 +441,20 @@ StartDefaultTask(void *argument)
 {
   /* USER CODE BEGIN 5 */
   /* Infinite loop */
-actor = actor_spawn(test, NULL);
+/*actor = actor_spawn(test, NULL);
 jump_to_next();
-send(actor, actor, 0, 0, 0);
+send(actor, actor, 0, 0, 0);*/
+
 	/*boot_args *args = malloc(sizeof(boot_args));
 	args -> first = NULL;
 	args -> actor_number = 7;
 	actor = actor_spawn(tokring, args);
 	jump_to_next();
 	send(actor, actor, 7, 0, 0);*/
+
+actor = actor_spawn(tree,NULL);
+jump_to_next();
+send(actor, actor, 4, 0, 0);
   /* USER CODE END 5 */
 }
 
@@ -460,7 +465,7 @@ void StartTask2(void *argument)
   /* USER CODE BEGIN 5 */
   /* Infinite loop */
 
-send(actor, actor,  0, 0, 0);
+send(actor, actor,  5, 0, 0);
 
 
   /* USER CODE END 5 */

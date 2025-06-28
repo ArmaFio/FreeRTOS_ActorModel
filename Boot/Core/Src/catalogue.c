@@ -16,3 +16,6 @@ catalogue_entry dispatcher = &disp_cat;
 
 extern cat_cnt tokr_cat;
 catalogue_entry tokring = &tokr_cat;
+
+extern cat_cnt tree_cat;
+catalogue_entry tree = &tree_cat;

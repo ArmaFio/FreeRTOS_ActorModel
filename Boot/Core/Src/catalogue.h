@@ -14,5 +14,6 @@
 extern catalogue_entry test;
 extern catalogue_entry dispatcher;
 extern catalogue_entry tokring;
+extern catalogue_entry tree;
 
 #endif /* SRC_CATALOGUE_H_ */
