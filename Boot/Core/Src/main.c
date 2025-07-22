@@ -179,15 +179,6 @@ int main(void)
   if (!done){
 	  return 1;
   }
-  /* USER CODE BEGIN RTOS_THREADS */
-  //handle2= osThreadNew(StartTask2, NULL, &Task2_attributes);
-  //handle3= osThreadNew(StartTask2, NULL, &Task3_attributes);
-  //handle4= osThreadNew(StartTask2, NULL, &Task4_attributes);
-  //handle5= osThreadNew(StartTask2, NULL, &Task5_attributes);
-  /* USER CODE END RTOS_THREADS */
-  /* USER CODE BEGIN RTOS_EVENTS */
-  /* add events, ... */
-  /* USER CODE END RTOS_EVENTS */
 
   /* Start scheduler */
   vTaskStartScheduler();
