@@ -34,7 +34,7 @@
 #include "utils.h"
 #include "tokring.h"
 #include <stdlib.h>
-#include <time.h>
+
 
 /* USER CODE END Includes */
 
@@ -56,7 +56,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 actor_handle actor;
-uint32_t start, start_ms, endtime, endtime_ms, cpu_time_used, cpu_time_used_ms;
+uint32_t start, endtime, cpu_time_used;
 
 UART_HandleTypeDef huart3;
 
@@ -80,8 +80,10 @@ static void MX_GPIO_Init(void);
 static void MX_SBS_Init(void);
 static void MX_XSPI2_Init(void);
 static void MX_USART3_UART_Init(void);
-void StartDefaultTask(void *argument);
-void StartTask2(void *argument);
+void BaseTest(void *argument);
+void TokringTest(void *argument);
+void TokringTest_WithDispatcher(void *argument);
+void TreeTest(void *argument);
 
 /* USER CODE BEGIN PFP */
 
@@ -170,7 +172,10 @@ int main(void)
 
   /* Create the thread(s) */
   /* creation of defaultTask */
-  done = xTaskCreate(StartDefaultTask, "defaultTask", 512, NULL, 10,  &defaultTaskHandle);
+  //done = xTaskCreate(BaseTest, "defaultTask", 512, NULL, 10,  &defaultTaskHandle);
+  done = xTaskCreate(TokringTest, "defaultTask", 512, NULL, 10,  &defaultTaskHandle);
+  //done = xTaskCreate(TokringTest_WithDispatcher, "defaultTask", 512, NULL, 10,  &defaultTaskHandle);
+  //done = xTaskCreate(TreeTest, "defaultTask", 512, NULL, 10,  &defaultTaskHandle);
   if (!done){
 	  return 1;
   }
@@ -422,17 +427,30 @@ static void MX_GPIO_Init(void)
   */
 /* USER CODE END Header_StartDefaultTask */
 void __attribute__((noreturn))
-StartDefaultTask(void *argument)
-{
-  /* USER CODE BEGIN 5 */
-  /* Infinite loop */
-/*actor = actor_spawn(test, NULL);
-jump_to_next();
-send(actor, actor, 0, 0, 0);*/
+BaseTest(void *argument) {
+	actor = actor_spawn(test, NULL);
+	jump_to_next();
+	send(actor, actor, 0, 0, 0);
+}
 
+void __attribute__((noreturn))
+TokringTest(void *argument) {
 	boot_args *args = malloc(sizeof(boot_args));
 	args -> first = NULL;
 	args -> actor_number = 7;
+	args-> message_number = 100;
+	actor = actor_spawn(tokring, args);
+	start = DWT->CYCCNT;
+	jump_to_next();
+	send(actor, actor, 7, 0, 0);
+}
+
+void __attribute__((noreturn))
+TokringTest_WithDispatcher(void *argument) {
+	boot_args *args = malloc(sizeof(boot_args));
+	args -> first = NULL;
+	args -> actor_number = 7;
+	args-> message_number = 0;
 	actor = actor_spawn(tokring, args);
 	stored_msg *list = NULL;
 	for (int i = 0 ; i<200 ; i++) {
@@ -440,39 +458,28 @@ send(actor, actor, 0, 0, 0);*/
 		mailbox_push(&list, 13, 0, 0, ((ring_st *)actor->state)-> succ);
 	}
 	start = DWT->CYCCNT;
-	start_ms = HAL_GetTick();
 	jump_to_next();
 	multiple_send(NULL, list);
-
-/*actor = actor_spawn(tree,NULL);
-jump_to_next();
-send(actor, actor, 4, 0, 0);
-  USER CODE END 5 */
 }
 
 
 
-void StartTask2(void *argument)
-{
-  /* USER CODE BEGIN 5 */
-  /* Infinite loop */
-
-send(actor, actor,  3, 0, 0);
-
-
-  /* USER CODE END 5 */
+void TreeTest(void *argument) {
+	actor = actor_spawn(tree,NULL);
+	jump_to_next();
+	send(actor, actor, 4, 0, 0);
 }
+
 
 void vApplicationIdleHook(void) {
-    // Codice da eseguire quando il sistema è inattivo
+	size_t size;
+	size = xPortGetFreeHeapSize();;
 	endtime = DWT->CYCCNT;
-	endtime_ms = HAL_GetTick();
 	cpu_time_used = endtime - start;
-    cpu_time_used_ms = (endtime_ms - start_ms);
     long time_ms = (long)cpu_time_used / (SystemCoreClock / 1e3);
     printf("clock_t raw value: %ld\n", (long)cpu_time_used);
-    printf("clock_t raw value: %ld\n", (long)cpu_time_used_ms);
-    printf("clock_t raw value: %ld\n", time_ms);// ARM: Wait For Interrupt per risparmio energetico
+    printf("clock_t raw value: %ld\n", time_ms);
+	printf("%d", size);
 }
 
 

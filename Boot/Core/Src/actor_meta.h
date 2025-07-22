@@ -12,6 +12,7 @@
 #include "semphr.h"
 #include <stdint.h>
 
+/* Message structure */
 typedef struct stored_msg{
 	actor_handle dest;
 	uint32_t p0;
@@ -23,11 +24,11 @@ typedef struct stored_msg{
 
 typedef struct actor_obj{
 
-	SemaphoreHandle_t lock;
-	msghand handle;
-	void *state;
-	stored_msg *mailbox;
-	void (*des)(struct actor_obj *);
+	SemaphoreHandle_t lock; /* Mutex of the actor */
+	msghand handle; /* Message processing function */
+	void *state; /* State of the actor */
+	stored_msg *mailbox; /* Queue of messages to be processed in priority order */
+	void (*des)(struct actor_obj *); /* Destructor */
 
 } actor_obj;
 

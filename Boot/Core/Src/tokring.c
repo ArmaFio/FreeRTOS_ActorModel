@@ -22,9 +22,14 @@
 #include "tokring.h"
 
 
-
 static void __attribute__((noreturn))
 handle(actor_handle self, actor_handle dest, uint32_t p0, uint32_t p1, uint32_t p2) {
+	if (((ring_st *)self->state)->filled == 0 && ((ring_st *)self->state)->first !=self){
+		for (int i = 0; i < ((ring_st *)self->state)->message_number; i++){
+			mailbox_push(&(self->mailbox), ((((ring_st *)self->state)->actor_number)+1), 0, 0, self);
+		}
+		((ring_st *)self->state)->filled = 1;
+	}
 	if (p0 > 0)
 		send (((ring_st *)self->state)->succ, self, p0-1 , 0, 0);
 	else{
@@ -41,17 +46,20 @@ void tokring_boot(actor_handle self, void *args) {
 	self->handle = handle;
 	self->state = pvPortMalloc(sizeof(ring_st));
 	((ring_st *)self->state)-> val = 0;
+	((ring_st *)self->state)-> actor_number = arg -> actor_number;
+	((ring_st *)self->state)-> message_number = arg -> message_number;
 	if(arg-> actor_number > 0){
 		if (arg -> first == NULL){
-			arg-> actor_number -= 1;
+			arg -> actor_number -= 1;
 			arg -> first = self;
 		}
-		if (arg-> actor_number> 0){
+		if (arg -> actor_number > 0){
 			arg -> actor_number -= 1;
 			((ring_st *)self->state) -> succ = actor_spawn(tokring, arg);
 		}
 	}
 	else{
+		((ring_st *)self->state)-> first = arg -> first;
 		((ring_st *)self->state) -> succ = arg->first;
 		free (arg);
 	}
