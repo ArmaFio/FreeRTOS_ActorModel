@@ -14,3 +14,7 @@ The implementation is intended as a minimal example or prototype for experimenti
 - Each message is implemented as an independent task
 - Encapsulation of behavior within messages
 - Based on FreeRTOS for real-time scheduling
+
+## 🧪 Tested Hardware
+
+This implementation has been **tested on the [STM32 Nucleo-H7S3L8](https://www.st.com/en/evaluation-tools/nucleo-h7s3l8.html)** board using STM32CubeIDE.
