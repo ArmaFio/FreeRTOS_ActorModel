@@ -24,12 +24,12 @@ typedef struct {
     actor_handle dest;
 } SendArgs_t;
 
+/* "Called by" forward or send: it starts the message processing in the destination actor if it's free and its mailbox is empty, otherwise it adds the message in its mailbox*/
 void __attribute__((noreturn))
 send_message(void *param){
 	SendArgs_t *arg = (SendArgs_t *)param;
 	actor_handle dest = arg->dest;
 	uint32_t p0 = arg->p0, p1 = arg->p1, p2 = arg->p2;
-	//vTaskSetThreadLocalStoragePointer(NULL, 1, NULL);
 	vPortFree(arg);
 	if(dest->mailbox == NULL){
 		if(xSemaphoreTake(dest->lock, (TickType_t) 0) == pdTRUE){
@@ -46,6 +46,7 @@ send_message(void *param){
 	}
 	while(1){};
 }
+
 
 void __attribute__((noreturn))
 send(actor_handle dest, actor_handle self, uint32_t p0, uint32_t p1, uint32_t p2){
@@ -65,6 +66,7 @@ send(actor_handle dest, actor_handle self, uint32_t p0, uint32_t p1, uint32_t p2
     while (1) {} // fallback
 }
 
+/*Used by the dispatcher to "Self-destruct" when the messages to forward are ended*/
 void __attribute__((noreturn))
 forward(actor_handle dest, actor_handle self, uint32_t p0, uint32_t p1, uint32_t p2){
 	size_t size;
@@ -86,10 +88,11 @@ forward(actor_handle dest, actor_handle self, uint32_t p0, uint32_t p1, uint32_t
 	}
     longjmp(*buf, 1);
 
-    while (1) {} // fallback
+    while (1) {}
 }
 
 
+/*Called by an actor to send multiple messages, it uses the dispatcher*/
 void __attribute__((noreturn))
 multiple_send(actor_handle self, stored_msg *messages){
 	size_t size;

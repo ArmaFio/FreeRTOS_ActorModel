@@ -13,6 +13,7 @@
 #include "actor_meta.h"
 #include "mailbox.h"
 
+/*Priority push*/
 void mailbox_push (stored_msg **mailbox, uint32_t p0, uint32_t p1, uint32_t p2, actor_handle dest){
 	stored_msg *message=pvPortMalloc(sizeof(stored_msg)), *curr;
 	message->dest = dest;
@@ -40,6 +41,7 @@ void mailbox_push (stored_msg **mailbox, uint32_t p0, uint32_t p1, uint32_t p2, 
 
 	curr->next=message;
 }
+
 
 stored_msg* mailbox_pop(stored_msg **mailbox){
 	stored_msg *next_msg = *mailbox;

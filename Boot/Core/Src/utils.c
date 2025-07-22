@@ -14,6 +14,11 @@
 
 extern forkArgs_t *forkargs;
 
+/* When a task begins its execution, it calls jump_to_next to set a jump buffer : in that moment its stack is still ~empty
+ * Each time an actor performs a send/forward it makes a noreturnjump to reset the stack to that state freeing some space
+ * The state is maintained using a ThreadLocalStoragePointer to keep a pointer to the message that is being sent
+ */
+
 void __attribute__((noreturn))
 noreturnjump(){
 	void *args = NULL;
@@ -22,7 +27,6 @@ noreturnjump(){
 	while(1){};
 }
 
-// Wrapper del task
 
 void jump_to_next() {
     jmp_buf *jump_buf_ptr= pvPortMalloc(sizeof(jmp_buf));
@@ -33,6 +37,10 @@ void jump_to_next() {
     }
 }
 
+/*
+ * This ends a task: if there's a son that can delete it the task suspends: this way it will be externally freed by the son who will also free its TCB
+ * This is done to optimize memory efficiency
+ */
 void end(){
 	jmp_buf *jmp = pvTaskGetThreadLocalStoragePointer(NULL, 0);
 	int isBeingDeleted = (int)(intptr_t) pvTaskGetThreadLocalStoragePointer(NULL, 2);

@@ -14,6 +14,9 @@
 #include "send.h"
 #include "mailbox.h"
 
+/*Dispatcher boots pushing into its mailbox the list of messages to be forwarded, then sends it one by one to their actual destination.
+ *Used to send multiple messages from a single actor
+ */
 
 void __attribute__((noreturn))
 handle(actor_handle self, actor_handle dest, uint32_t p0, uint32_t p1, uint32_t p2){
