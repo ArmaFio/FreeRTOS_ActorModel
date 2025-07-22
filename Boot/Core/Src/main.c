@@ -472,14 +472,11 @@ void TreeTest(void *argument) {
 
 
 void vApplicationIdleHook(void) {
-	size_t size;
-	size = xPortGetFreeHeapSize();;
 	endtime = DWT->CYCCNT;
 	cpu_time_used = endtime - start;
     long time_ms = (long)cpu_time_used / (SystemCoreClock / 1e3);
     printf("clock_t raw value: %ld\n", (long)cpu_time_used);
     printf("clock_t raw value: %ld\n", time_ms);
-	printf("%d", size);
 }
 
 

@@ -87,7 +87,6 @@ forward(actor_handle dest, actor_handle self, uint32_t p0, uint32_t p1, uint32_t
 		actor_retire(self);
 	}
     longjmp(*buf, 1);
-
     while (1) {}
 }
 
@@ -95,16 +94,13 @@ forward(actor_handle dest, actor_handle self, uint32_t p0, uint32_t p1, uint32_t
 /*Called by an actor to send multiple messages, it uses the dispatcher*/
 void __attribute__((noreturn))
 multiple_send(actor_handle self, stored_msg *messages){
-	size_t size;
 	stored_msg firstmsg;
 	if(self!=NULL){
 		actor_fork(self);
 		xSemaphoreGive(self->lock);
 	}
 	actor_handle disp = actor_spawn(dispatcher, messages);
-	size = xPortGetFreeHeapSize();
 	xSemaphoreTake(disp->lock, portMAX_DELAY);
-	printf("%d", size);
 	stored_msg *first = mailbox_pop(&(disp->mailbox));
 	firstmsg = *first;
 	vPortFree(first);

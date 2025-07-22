@@ -19,11 +19,8 @@
 
 static void __attribute__((noreturn))
 handle(actor_handle self, actor_handle dest, uint32_t p0, uint32_t p1, uint32_t p2) {
-	size_t size;
 	stored_msg *list;
 	if( (int) self->state < 100){
-		size = xPortGetFreeHeapSize();
-		printf("%d", size);
 		self->state += 1;
 		if ( (int) self->state == 1){
 			for (int i=0; i<100; i++){
