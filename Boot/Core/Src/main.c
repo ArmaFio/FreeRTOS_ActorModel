@@ -173,8 +173,8 @@ int main(void)
   /* Create the thread(s) */
   /* creation of defaultTask */
   //done = xTaskCreate(BaseTest, "defaultTask", 512, NULL, 10,  &defaultTaskHandle);
-  done = xTaskCreate(TokringTest, "defaultTask", 512, NULL, 10,  &defaultTaskHandle);
-  //done = xTaskCreate(TokringTest_WithDispatcher, "defaultTask", 512, NULL, 10,  &defaultTaskHandle);
+  //done = xTaskCreate(TokringTest, "defaultTask", 512, NULL, 10,  &defaultTaskHandle);
+  done = xTaskCreate(TokringTest_WithDispatcher, "defaultTask", 512, NULL, 10,  &defaultTaskHandle);
   //done = xTaskCreate(TreeTest, "defaultTask", 512, NULL, 10,  &defaultTaskHandle);
   if (!done){
 	  return 1;
@@ -444,7 +444,7 @@ TokringTest_WithDispatcher(void *argument) {
 	args-> message_number = 0;
 	actor = actor_spawn(tokring, args);
 	stored_msg *list = NULL;
-	for (int i = 0 ; i<200 ; i++) {
+	for (int i = 0 ; i<500 ; i++) {
 		mailbox_push(&list, 7, 0, 0, actor);
 		mailbox_push(&list, 13, 0, 0, ((ring_st *)actor->state)-> succ);
 	}
@@ -458,7 +458,7 @@ TokringTest_WithDispatcher(void *argument) {
 void TreeTest(void *argument) {
 	actor = actor_spawn(tree,NULL);
 	jump_to_next();
-	send(actor, actor, 4, 0, 0);
+	send(actor, actor, 0, 0, 0);
 }
 
 
@@ -466,7 +466,7 @@ void vApplicationIdleHook(void) {
 	endtime = DWT->CYCCNT;
 	cpu_time_used = endtime - start;
     long time_ms = (long)cpu_time_used / (SystemCoreClock / 1e3);
-    printf("clock_t raw value: %ld\n", (long)cpu_time_used);
+     printf("clock_t raw value: %ld\n", (long)cpu_time_used);
     printf("clock_t raw value: %ld\n", time_ms);
 }
 

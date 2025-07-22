@@ -39,6 +39,7 @@ handle(actor_handle self, actor_handle dest, uint32_t p0, uint32_t p1, uint32_t 
 				send(((tree_st *)(self->state))->father, self, 0,1,1);
 			}else{
 				((tree_st *)(self->state))->sum = 1;
+				send(self, self, 0,1,0);
 			}
 		}
 	}else{
