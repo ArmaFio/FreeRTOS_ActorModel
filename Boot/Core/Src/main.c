@@ -466,7 +466,7 @@ void vApplicationIdleHook(void) {
 	endtime = DWT->CYCCNT;
 	cpu_time_used = endtime - start;
     long time_ms = (long)cpu_time_used / (SystemCoreClock / 1e3);
-     printf("clock_t raw value: %ld\n", (long)cpu_time_used);
+    printf("clock_t raw value: %ld\n", (long)cpu_time_used);
     printf("clock_t raw value: %ld\n", time_ms);
 }
 
