@@ -34,6 +34,7 @@
 #include "utils.h"
 #include "tokring.h"
 #include <stdlib.h>
+#include <time.h>
 
 /* USER CODE END Includes */
 
@@ -55,6 +56,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 actor_handle actor;
+uint32_t start, start_ms, endtime, endtime_ms, cpu_time_used, cpu_time_used_ms;
 
 UART_HandleTypeDef huart3;
 
@@ -97,26 +99,6 @@ void StartTask2(void *argument);
 
 void hard_fault_handler_c(uint32_t *stack_address)
 {
-  uint32_t r0  = stack_address[0];
-  uint32_t r1  = stack_address[1];
-  uint32_t r2  = stack_address[2];
-  uint32_t r3  = stack_address[3];
-  uint32_t r12 = stack_address[4];
-  uint32_t lr  = stack_address[5]; // Link Register
-  uint32_t pc  = stack_address[6]; // <- questo ci interessa!
-  uint32_t psr = stack_address[7]; // Program Status Register
-
-  printf("=== HARD FAULT ===\r\n");
-  printf("R0  = 0x%08lX\r\n", r0);
-  printf("R1  = 0x%08lX\r\n", r1);
-  printf("R2  = 0x%08lX\r\n", r2);
-  printf("R3  = 0x%08lX\r\n", r3);
-  printf("R12 = 0x%08lX\r\n", r12);
-  printf("LR  = 0x%08lX\r\n", lr);
-  printf("PC  = 0x%08lX\r\n", pc);   // <--- Indirizzo dove è avvenuto il crash
-  printf("PSR = 0x%08lX\r\n", psr);
-
-  // Blocca il programma qui
   while (1);
 }
 
@@ -163,6 +145,9 @@ int main(void)
   MX_EXTMEM_MANAGER_Init();
   /* USER CODE BEGIN 2 */
 
+  CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
+  DWT->CYCCNT = 0;                        // Reset contatore cicli CPU
+  DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;   // Abilita contatore
   /* USER CODE END 2 */
 
   /* Init scheduler */
@@ -445,17 +430,24 @@ StartDefaultTask(void *argument)
 jump_to_next();
 send(actor, actor, 0, 0, 0);*/
 
-	/*boot_args *args = malloc(sizeof(boot_args));
+	boot_args *args = malloc(sizeof(boot_args));
 	args -> first = NULL;
 	args -> actor_number = 7;
 	actor = actor_spawn(tokring, args);
+	stored_msg *list = NULL;
+	for (int i = 0 ; i<200 ; i++) {
+		mailbox_push(&list, 7, 0, 0, actor);
+		mailbox_push(&list, 13, 0, 0, ((ring_st *)actor->state)-> succ);
+	}
+	start = DWT->CYCCNT;
+	start_ms = HAL_GetTick();
 	jump_to_next();
-	send(actor, actor, 7, 0, 0);*/
+	multiple_send(NULL, list);
 
-actor = actor_spawn(tree,NULL);
+/*actor = actor_spawn(tree,NULL);
 jump_to_next();
 send(actor, actor, 4, 0, 0);
-  /* USER CODE END 5 */
+  USER CODE END 5 */
 }
 
 
@@ -465,17 +457,29 @@ void StartTask2(void *argument)
   /* USER CODE BEGIN 5 */
   /* Infinite loop */
 
-send(actor, actor,  5, 0, 0);
+send(actor, actor,  3, 0, 0);
 
 
   /* USER CODE END 5 */
 }
 
+void vApplicationIdleHook(void) {
+    // Codice da eseguire quando il sistema è inattivo
+	endtime = DWT->CYCCNT;
+	endtime_ms = HAL_GetTick();
+	cpu_time_used = endtime - start;
+    cpu_time_used_ms = (endtime_ms - start_ms);
+    long time_ms = (long)cpu_time_used / (SystemCoreClock / 1e3);
+    printf("clock_t raw value: %ld\n", (long)cpu_time_used);
+    printf("clock_t raw value: %ld\n", (long)cpu_time_used_ms);
+    printf("clock_t raw value: %ld\n", time_ms);// ARM: Wait For Interrupt per risparmio energetico
+}
+
+
 
  /* MPU Configuration */
 
-static void MPU_Config(void)
-{
+static void MPU_Config(void) {
 MPU_Region_InitTypeDef MPU_InitStruct = {0};
 
   /* Disables the MPU */

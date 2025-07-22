@@ -35,6 +35,10 @@ send_message(void *param){
 		if(xSemaphoreTake(dest->lock, (TickType_t) 0) == pdTRUE){
 			dest->handle(dest, dest, p0, p1, p2);
 		}
+		else{
+			mailbox_push(&(dest->mailbox), p0, p1, p2, dest);
+			end();
+		}
 	}
 	else{
 		mailbox_push(&(dest->mailbox), p0, p1, p2, dest);
@@ -45,7 +49,6 @@ send_message(void *param){
 
 void __attribute__((noreturn))
 send(actor_handle dest, actor_handle self, uint32_t p0, uint32_t p1, uint32_t p2){
-    actor_fork(self);
     SendArgs_t *args = pvPortMalloc(sizeof(*args));
     args->dest = dest;
     args->p0   = p0;
@@ -56,6 +59,7 @@ send(actor_handle dest, actor_handle self, uint32_t p0, uint32_t p1, uint32_t p2
 
     vTaskSetThreadLocalStoragePointer(NULL, 1, args);
     xSemaphoreGive(self->lock);
+    actor_fork(self);
     longjmp(*buf, 1);
 
     while (1) {} // fallback
@@ -63,7 +67,7 @@ send(actor_handle dest, actor_handle self, uint32_t p0, uint32_t p1, uint32_t p2
 
 void __attribute__((noreturn))
 forward(actor_handle dest, actor_handle self, uint32_t p0, uint32_t p1, uint32_t p2){
-    actor_fork(self);
+	size_t size;
     SendArgs_t *args = pvPortMalloc(sizeof(*args));
     args->dest = dest;
     args->p0   = p0;
@@ -74,6 +78,9 @@ forward(actor_handle dest, actor_handle self, uint32_t p0, uint32_t p1, uint32_t
 
     vTaskSetThreadLocalStoragePointer(NULL, 1, args);
     xSemaphoreGive(self->lock);
+	size = xPortGetFreeHeapSize();
+	printf("%d", size);
+    actor_fork(self);
 	if(self->mailbox == NULL){
 		actor_retire(self);
 	}
@@ -86,11 +93,13 @@ forward(actor_handle dest, actor_handle self, uint32_t p0, uint32_t p1, uint32_t
 void __attribute__((noreturn))
 multiple_send(actor_handle self, stored_msg *messages){
 	size_t size;
-	size = xPortGetFreeHeapSize();
 	stored_msg firstmsg;
-	actor_fork(self);
-	xSemaphoreGive(self->lock);
+	if(self!=NULL){
+		actor_fork(self);
+		xSemaphoreGive(self->lock);
+	}
 	actor_handle disp = actor_spawn(dispatcher, messages);
+	size = xPortGetFreeHeapSize();
 	xSemaphoreTake(disp->lock, portMAX_DELAY);
 	printf("%d", size);
 	stored_msg *first = mailbox_pop(&(disp->mailbox));

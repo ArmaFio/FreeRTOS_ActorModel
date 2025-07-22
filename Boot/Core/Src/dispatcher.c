@@ -17,7 +17,6 @@
 
 void __attribute__((noreturn))
 handle(actor_handle self, actor_handle dest, uint32_t p0, uint32_t p1, uint32_t p2){
-	xSemaphoreGive(self->lock);
 	forward(dest, self, p0, p1, p2);
 }
 
@@ -30,6 +29,7 @@ void disp_boot(actor_handle self, void *args){
 	do {
 		curr = mailbox_pop(&messages);
 		mailbox_push(&(self->mailbox), curr->p0, curr->p1, curr->p2, curr->dest);
+		vPortFree(curr);
 	}while(messages!=NULL);
 }
 

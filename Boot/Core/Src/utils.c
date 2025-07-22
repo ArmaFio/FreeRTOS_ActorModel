@@ -10,8 +10,9 @@
 #include "setjmp.h"
 #include "utils.h"
 #include "send.h"
+#include "fork.h"
 
-
+extern forkArgs_t *forkargs;
 
 void __attribute__((noreturn))
 noreturnjump(){
@@ -36,8 +37,13 @@ void end(){
 	jmp_buf *jmp = pvTaskGetThreadLocalStoragePointer(NULL, 0);
 	int isBeingDeleted = (int)(intptr_t) pvTaskGetThreadLocalStoragePointer(NULL, 2);
 	vPortFree(jmp);
-	if (isBeingDeleted == 1)
+	if (isBeingDeleted == 1 && forkargs->sonHasExecuted == 0){
 		vTaskSuspend(NULL);
-	else
+	}
+	else{
+		if (isBeingDeleted == 1 && forkargs->sonHasExecuted == 1){
+			vPortFree(forkargs);
+		}
 		vTaskDelete(NULL);
+	}
 }
